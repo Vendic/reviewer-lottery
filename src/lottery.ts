@@ -12,7 +12,8 @@ export interface Pull {
 
 interface Env {
     repository: string
-    ref: string
+    ref: string,
+    pull_number? : string
 }
 
 class Lottery {
@@ -34,7 +35,8 @@ class Lottery {
         this.config = config
         this.env = {
             repository: env.repository,
-            ref: env.ref
+            ref: env.ref,
+            pull_number: env.pull_number
         }
         this.pr = undefined
     }
@@ -152,6 +154,31 @@ class Lottery {
     async getPR(): Promise<Pull | undefined> {
         if (this.pr) return this.pr
 
+        if (this.env.pull_number !== undefined) {
+            try {
+                const {data} = await this.octokit.pulls.get({
+                    ...this.getOwnerAndRepo(),
+                    pull_number: Number(this.env.pull_number)
+                })
+
+                if (!data ) {
+                    throw new Error(`PR not found: ${this.env.pull_number}`)
+                }
+
+                // @ts-ignore
+                this.pr = data
+
+                return this.pr
+            } catch (error) {
+                // @ts-ignore
+                core.error(error)
+                // @ts-ignore
+                core.setFailed(error)
+
+                return undefined
+            }
+        }
+
         try {
             const {data} = await this.octokit.pulls.list({
                 ...this.getOwnerAndRepo()
@@ -179,11 +206,16 @@ class Lottery {
 export const runLottery = async (
     octokit: Octokit,
     config: Config,
-    env = {
+    env: Env = {
         repository: process.env.GITHUB_REPOSITORY || '',
-        ref: process.env.GITHUB_HEAD_REF || ''
+        ref: process.env.GITHUB_HEAD_REF || '',
+        pull_number: process.env.GITHUB_PULL_NUMBER
     }
 ): Promise<void> => {
+    core.info(`Repository: ${env.repository}`)
+    core.info(`Ref: ${env.ref}`)
+    core.info(`Pull number: ${env.pull_number}`)
+
     const lottery = new Lottery({octokit, config, env})
 
     await lottery.run()

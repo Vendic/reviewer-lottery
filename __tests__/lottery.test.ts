@@ -12,6 +12,55 @@ const mockGetPull = (pull: Pull) =>
     .get('/repos/uesteibar/repository/pulls')
     .reply(200, [pull])
 
+
+test('selects reviewers from a pool of users, ignoring author using PR input', async () => {
+    const pull = {
+        ...basePull,
+        user: {login: 'author'},
+        draft: false
+    }
+
+    const candidates = ['A', 'B', 'C', 'D', 'author']
+
+    const postReviewersMock = nock('https://api.github.com')
+        .post(
+            `/repos/uesteibar/repository/pulls/${prNumber}/requested_reviewers`,
+            (body): boolean => {
+                body.reviewers.forEach((reviewer: string) => {
+                    expect(candidates).toContain(reviewer)
+                    expect(reviewer).not.toEqual('author')
+                })
+                return true
+            }
+        )
+        .reply(200, pull)
+
+    const prMock = nock('https://api.github.com')
+        .get(`/repos/uesteibar/repository/pulls/${prNumber}`)
+        .reply(200, pull)
+
+    const config = {
+        groups: [
+            {
+                name: 'Test',
+                reviewers: 2,
+                usernames: candidates
+            }
+        ]
+    }
+
+    await runLottery(octokit, config, {
+        repository: 'uesteibar/repository',
+        ref,
+        pull_number: prNumber.toString()
+    })
+
+    postReviewersMock.done()
+    prMock.done()
+
+    nock.cleanAll()
+})
+
 test('selects reviewers from a pool of users, ignoring author', async () => {
   const pull = {
     ...basePull,
@@ -48,7 +97,7 @@ test('selects reviewers from a pool of users, ignoring author', async () => {
 
   await runLottery(octokit, config, {
     repository: 'uesteibar/repository',
-    ref
+    ref,
   })
 
   getPullMock.done()

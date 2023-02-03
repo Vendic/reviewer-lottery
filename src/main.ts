@@ -14,7 +14,8 @@ async function run(): Promise<void> {
 
     await runLottery(new Octokit({auth: token}), config)
   } catch (error) {
-    core.setFailed(error.message)
+    // @ts-ignore
+      core.setFailed(error.message)
   }
 }
 
