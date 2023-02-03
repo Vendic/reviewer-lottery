@@ -54,6 +54,16 @@ When opening a PR, this github action will assign random reviewers:
 
 ![](./img/assignation_example.png)
 
+## Usage on `workflow_dispatch`
+It's possible to set the pull request number manually via an enviroment variable, this is usefull when pull_request is missing from the Github context.
+```
+      - uses: Vendic/reviewer-lottery@feature/workflow-dispatch
+        env:
+          GITHUB_PULL_NUMBER: ${{ env.YOUR_CUSTOM_PULL_REQUEST_NUMBER }} 
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
 
 ## FAQ
 
