@@ -16,8 +16,7 @@ export const getConfig = (): Config => {
   const configPath = core.getInput('config', {required: true})
 
   try {
-    // @ts-ignore
-      const config = yaml.safeLoad(fs.readFileSync(configPath, 'utf8')) as Config
+      const config = yaml.load(fs.readFileSync(configPath, 'utf8')) as Config
 
     for (const group of config.groups) {
       if (!group.reviewers && !group.internal_reviewers) {
