@@ -13396,8 +13396,7 @@ const fs_1 = __importDefault(__nccwpck_require__(7147));
 const getConfig = () => {
     const configPath = core.getInput('config', { required: true });
     try {
-        // @ts-ignore
-        const config = js_yaml_1.default.safeLoad(fs_1.default.readFileSync(configPath, 'utf8'));
+        const config = js_yaml_1.default.load(fs_1.default.readFileSync(configPath, 'utf8'));
         for (const group of config.groups) {
             if (!group.reviewers && !group.internal_reviewers) {
                 throw new Error('One of `reviewers` or `internal_reviewers` should be set');
