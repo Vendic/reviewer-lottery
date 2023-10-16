@@ -13478,7 +13478,8 @@ class Lottery {
                     const assignedReviewers = yield this.setReviewers(reviewers);
                     core.debug(`Status code: ${assignedReviewers.status}`);
                     core.debug(`Response: ${JSON.stringify(assignedReviewers.data)}`);
-                    if (assignedReviewers.status == 200 && assignedReviewers.data.requested_reviewers.length > 0) {
+                    const statusRegex = /^2\d{2}$/;
+                    if (statusRegex.test(assignedReviewers.status.toString()) && assignedReviewers.data.requested_reviewers.length > 0) {
                         core.info(`Assigned reviewers: ${assignedReviewers.data.requested_reviewers.map((reviewer) => reviewer.login).join(', ')}`);
                         core.setOutput('reviewers', assignedReviewers.data.requested_reviewers.map((reviewer) => reviewer.login).join(','));
                     }
