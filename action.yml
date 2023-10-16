@@ -14,7 +14,6 @@ inputs:
 outputs:
   reviewers:
     description: 'Reviewers assigned to the PR'
-    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'
