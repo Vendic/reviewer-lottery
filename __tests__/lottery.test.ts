@@ -1,6 +1,9 @@
 import {Octokit} from '@octokit/rest'
+import * as core from '@actions/core'
 import nock from 'nock'
 import {runLottery, Pull} from '../src/lottery'
+import fs from 'fs'
+import {expect, test} from '@jest/globals'
 
 const octokit = new Octokit()
 const prNumber = 123
@@ -20,7 +23,11 @@ test('selects reviewers from a pool of users, ignoring author using PR input', a
         draft: false
     }
 
+    const outputMock = jest.spyOn(core, 'setOutput');
+
     const candidates = ['A', 'B', 'C', 'D', 'author']
+
+    const response = JSON.parse(fs.readFileSync(__dirname + '/mocks/requested_reviewers_response.json', 'utf8'));
 
     const postReviewersMock = nock('https://api.github.com')
         .post(
@@ -33,7 +40,7 @@ test('selects reviewers from a pool of users, ignoring author using PR input', a
                 return true
             }
         )
-        .reply(200, pull)
+        .reply(200, response)
 
     const prMock = nock('https://api.github.com')
         .get(`/repos/uesteibar/repository/pulls/${prNumber}`)
@@ -54,6 +61,8 @@ test('selects reviewers from a pool of users, ignoring author using PR input', a
         ref,
         pull_number: prNumber.toString()
     })
+
+    expect(outputMock).toHaveBeenCalledWith('reviewers', 'A,B');
 
     postReviewersMock.done()
     prMock.done()

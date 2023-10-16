@@ -9,12 +9,38 @@ export interface Pull {
     number: number
     draft: boolean
 }
-
 interface Env {
     repository: string
     ref: string,
     pull_number? : string
 }
+
+interface RequestReviewersResponse {
+    status: number; // Replace with the actual property name and type
+    data: {
+        requested_reviewers: {
+            login: string;
+            id: number;
+            node_id: string;
+            avatar_url: string;
+            gravatar_id: string;
+            url: string;
+            html_url: string;
+            followers_url: string;
+            following_url: string;
+            gists_url: string;
+            starred_url: string;
+            subscriptions_url: string;
+            organizations_url: string;
+            repos_url: string;
+            events_url: string;
+            received_events_url: string;
+            type: string;
+            site_admin: boolean;
+        }[];
+    }
+}
+
 
 class Lottery {
     octokit: Octokit
@@ -46,7 +72,17 @@ class Lottery {
             const ready = await this.isReadyToReview()
             if (ready) {
                 const reviewers = await this.selectReviewers()
-                reviewers.length > 0 && (await this.setReviewers(reviewers))
+
+                if (reviewers.length === 0) {
+                    return;
+                }
+
+                const assignedReviewers = await this.setReviewers(reviewers) as RequestReviewersResponse
+
+                if (assignedReviewers.status == 200 && assignedReviewers.data.requested_reviewers.length > 0) {
+                    core.info(`Assigned reviewers: ${assignedReviewers.data.requested_reviewers.map((reviewer) => reviewer.login).join(', ')}`)
+                    core.setOutput('reviewers', assignedReviewers.data.requested_reviewers.map((reviewer) => reviewer.login).join(','))
+                }
             }
         } catch (error) {
             // @ts-ignore
