@@ -13541,6 +13541,7 @@ class Lottery {
     pickRandom(items, n, ignore) {
         const picks = [];
         const candidates = items.filter(item => item !== ignore);
+        core.debug(`Candidates: ${candidates.join(', ')}`);
         while (picks.length < n) {
             const random = Math.floor(Math.random() * candidates.length);
             const pick = candidates.splice(random, 1)[0];
