@@ -13472,7 +13472,14 @@ class Lottery {
                 const ready = yield this.isReadyToReview();
                 if (ready) {
                     const reviewers = yield this.selectReviewers();
-                    reviewers.length > 0 && (yield this.setReviewers(reviewers));
+                    if (reviewers.length === 0) {
+                        return;
+                    }
+                    const assignedReviewers = yield this.setReviewers(reviewers);
+                    if (assignedReviewers.status == 200 && assignedReviewers.data.requested_reviewers.length > 0) {
+                        core.info(`Assigned reviewers: ${assignedReviewers.data.requested_reviewers.map((reviewer) => reviewer.login).join(', ')}`);
+                        core.setOutput('reviewers', assignedReviewers.data.requested_reviewers.map((reviewer) => reviewer.login).join(','));
+                    }
                 }
             }
             catch (error) {
