@@ -13455,6 +13455,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.runLottery = void 0;
 const core = __importStar(__nccwpck_require__(4181));
+const crypto = __importStar(__nccwpck_require__(6113));
 class Lottery {
     constructor({ octokit, config, env }) {
         this.octokit = octokit;
@@ -13543,12 +13544,17 @@ class Lottery {
         const candidates = items.filter(item => item !== ignore);
         core.debug(`Candidates: ${candidates.join(', ')}`);
         while (picks.length < n) {
-            const random = Math.floor(Math.random() * candidates.length);
+            const random = this.randomInt(candidates.length);
             const pick = candidates.splice(random, 1)[0];
             if (!picks.includes(pick))
                 picks.push(pick);
         }
         return picks;
+    }
+    randomInt(max) {
+        const randomBytes = crypto.randomBytes(4);
+        const seed = randomBytes.readUInt32LE(0);
+        return Math.floor(seed / 0xFFFFFFFF * max);
     }
     getPRAuthor() {
         return __awaiter(this, void 0, void 0, function* () {

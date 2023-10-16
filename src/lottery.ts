@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import {Octokit} from '@octokit/rest'
 import {Config} from './config'
+import * as crypto from 'crypto';
 
 export interface Pull {
     user: {
@@ -160,13 +161,19 @@ class Lottery {
         core.debug(`Candidates: ${candidates.join(', ')}`)
 
         while (picks.length < n) {
-            const random = Math.floor(Math.random() * candidates.length)
+            const random = this.randomInt(candidates.length);
             const pick = candidates.splice(random, 1)[0]
 
             if (!picks.includes(pick)) picks.push(pick)
         }
 
         return picks
+    }
+
+    randomInt(max: number) {
+        const randomBytes = crypto.randomBytes(4);
+        const seed = randomBytes.readUInt32LE(0);
+        return Math.floor(seed / 0xFFFFFFFF * max);
     }
 
     async getPRAuthor(): Promise<string> {
